@@ -1,0 +1,39 @@
+#!/usr/bin/python3
+
+# encoding=UTF-8
+
+# Copyright © 2018 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+import sys
+import base64
+import hmac
+import time
+import struct
+import hashlib
+
+def hotp(*, key, n, dgst=hashlib.sha1):
+    msg = struct.pack('>Q', n)
+    mac = hmac.HMAC(key=key, msg=msg, digestmod=dgst)
+    mac = mac.digest()
+    offset = mac[-1] & 0xF
+    code = mac[offset:(offset + 4)]
+    [code] = struct.unpack('>I', code)
+    code = code & ~(1 << 31)
+    code = str(code)[-6:]
+    return code
+
+def totp(*, key, dgst=hashlib.sha1, step=30):
+    t = int(time.time()) // step
+    return hotp(key=key, n=t, dgst=dgst)
+
+def main():
+    key = sys.stdin.read().strip().upper()
+    key = base64.b32decode(key)
+    code = totp(key=key)
+    print(code)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sts=4 sw=4 et
