@@ -4,6 +4,7 @@
 # Copyright © 2018 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
+import argparse
 import base64
 import hashlib
 import hmac
@@ -13,7 +14,9 @@ import time
 
 lambda: (yield from 0)  # Python >= 3.3 is required
 
-def hotp(*, key, n, dgst=hashlib.sha1):
+default_len = 6
+
+def hotp(*, key, n, len=default_len, dgst=hashlib.sha1):
     # RFC 4226
     msg = struct.pack('>Q', n)
     mac = hmac.HMAC(key=key, msg=msg, digestmod=dgst)
@@ -22,18 +25,26 @@ def hotp(*, key, n, dgst=hashlib.sha1):
     code = mac[offset:(offset + 4)]
     [code] = struct.unpack('>I', code)
     code = code & ~(1 << 31)
-    code = str(code)[-6:]
+    code = str(code)[-len:]
     return code
 
-def totp(*, key, dgst=hashlib.sha1, step=30):
+def totp(*, key, len=default_len, dgst=hashlib.sha1, step=30):
     # RFC 6238
     t = int(time.time()) // step
-    return hotp(key=key, n=t, dgst=dgst)
+    return hotp(key=key, n=t, len=len, dgst=dgst)
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.set_defaults(len=default_len)
+    for i in (6, 7, 8):
+        msg = 'print {0} digits'.format(i)
+        if i == default_len:
+            msg += ' (default)'
+        ap.add_argument('-{0}'.format(i), dest='len', action='store_const', const=i, help=msg)
+    opts = ap.parse_args();
     key = sys.stdin.read().strip().upper()
     key = base64.b32decode(key)
-    code = totp(key=key)
+    code = totp(key=key, len=opts.len)
     print(code)
 
 if __name__ == '__main__':
