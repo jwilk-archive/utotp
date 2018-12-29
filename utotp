@@ -52,11 +52,11 @@ def b32decode(s):
 def main():
     descr = (__doc__ or '').strip()
     ap = argparse.ArgumentParser(description=descr)
-    ap.set_defaults(len=default_len)
     for i in (6, 7, 8):
         msg = 'print {0} digits'.format(i)
         if i == default_len:
             msg += ' (default)'
+            ap.set_defaults(len=i)
         ap.add_argument('-{0}'.format(i), dest='len', action='store_const', const=i, help=msg)
     opts = ap.parse_args();
     key = sys.stdin.read()
