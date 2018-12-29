@@ -33,6 +33,15 @@ def totp(*, key, len=default_len, dgst=hashlib.sha1, step=30):
     t = int(time.time()) // step
     return hotp(key=key, n=t, len=len, dgst=dgst)
 
+def b32decode(s):
+    s = s.strip()
+    s = s.upper()
+    modlen = len(s) % 8
+    if modlen > 0:
+        s += '=' * (8 - modlen)
+    assert len(s) % 8 == 0
+    return base64.b32decode(s)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.set_defaults(len=default_len)
@@ -42,8 +51,8 @@ def main():
             msg += ' (default)'
         ap.add_argument('-{0}'.format(i), dest='len', action='store_const', const=i, help=msg)
     opts = ap.parse_args();
-    key = sys.stdin.read().strip().upper()
-    key = base64.b32decode(key)
+    key = sys.stdin.read()
+    key = b32decode(key)
     code = totp(key=key, len=opts.len)
     print(code)
 
