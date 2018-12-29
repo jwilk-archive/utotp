@@ -11,6 +11,8 @@ import struct
 import sys
 import time
 
+lambda: (yield from 0)  # Python >= 3.3 is required
+
 def hotp(*, key, n, dgst=hashlib.sha1):
     # RFC 4226
     msg = struct.pack('>Q', n)
