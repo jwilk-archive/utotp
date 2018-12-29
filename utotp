@@ -13,6 +13,7 @@ import sys
 import time
 
 def hotp(*, key, n, dgst=hashlib.sha1):
+    # RFC 4226
     msg = struct.pack('>Q', n)
     mac = hmac.HMAC(key=key, msg=msg, digestmod=dgst)
     mac = mac.digest()
@@ -24,6 +25,7 @@ def hotp(*, key, n, dgst=hashlib.sha1):
     return code
 
 def totp(*, key, dgst=hashlib.sha1, step=30):
+    # RFC 6238
     t = int(time.time()) // step
     return hotp(key=key, n=t, dgst=dgst)
 
