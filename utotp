@@ -4,6 +4,12 @@
 # Copyright © 2018 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
+'''
+utotp reads base32-encoded secret key from stdin
+and generates a time-based one-time password
+(as per RFC 6238).
+'''
+
 import argparse
 import base64
 import binascii
@@ -44,7 +50,8 @@ def b32decode(s):
     return base64.b32decode(s)
 
 def main():
-    ap = argparse.ArgumentParser()
+    descr = (__doc__ or '').strip()
+    ap = argparse.ArgumentParser(description=descr)
     ap.set_defaults(len=default_len)
     for i in (6, 7, 8):
         msg = 'print {0} digits'.format(i)
