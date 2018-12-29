@@ -22,8 +22,9 @@ import time
 lambda: (yield from 0)  # Python >= 3.3 is required
 
 default_len = 6
+default_dgst = hashlib.sha1
 
-def hotp(*, key, n, len=default_len, dgst=hashlib.sha1):
+def hotp(*, key, n, len=default_len, dgst=default_dgst):
     # RFC 4226
     msg = struct.pack('>Q', n)
     mac = hmac.HMAC(key=key, msg=msg, digestmod=dgst)
@@ -35,7 +36,7 @@ def hotp(*, key, n, len=default_len, dgst=hashlib.sha1):
     code = str(code)[-len:]
     return code
 
-def totp(*, key, len=default_len, dgst=hashlib.sha1, step=30):
+def totp(*, key, len=default_len, dgst=default_dgst, step=30):
     # RFC 6238
     t = int(time.time()) // step
     return hotp(key=key, n=t, len=len, dgst=dgst)
@@ -59,6 +60,14 @@ def main():
             msg += ' (default)'
             ap.set_defaults(len=i)
         ag.add_argument('-{0}'.format(i), dest='len', action='store_const', const=i, help=msg)
+    ag = ap.add_mutually_exclusive_group()
+    for i in (1, 256, 512):
+        dgst = getattr(hashlib, 'sha{0}'.format(i))
+        msg = 'use HMAC-SHA-{0}'.format(i)
+        if dgst is default_dgst:
+            msg += ' (default)'
+            ap.set_defaults(dgst=dgst)
+        ag.add_argument('--sha{0}'.format(i), dest='dgst', action='store_const', const=dgst, help=msg)
     opts = ap.parse_args();
     key = sys.stdin.read()
     try:
@@ -66,7 +75,7 @@ def main():
     except binascii.Error:
         print('{prog}: secret key cannot be base32-decoded'.format(prog=ap.prog), file=sys.stderr)
         sys.exit(1)
-    code = totp(key=key, len=opts.len)
+    code = totp(key=key, len=opts.len, dgst=opts.dgst)
     print(code)
 
 if __name__ == '__main__':
