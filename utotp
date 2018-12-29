@@ -6,6 +6,7 @@
 
 import argparse
 import base64
+import binascii
 import hashlib
 import hmac
 import struct
@@ -52,7 +53,11 @@ def main():
         ap.add_argument('-{0}'.format(i), dest='len', action='store_const', const=i, help=msg)
     opts = ap.parse_args();
     key = sys.stdin.read()
-    key = b32decode(key)
+    try:
+        key = b32decode(key)
+    except binascii.Error:
+        print('{prog}: secret key cannot be base32-decoded'.format(prog=ap.prog), file=sys.stderr)
+        sys.exit(1)
     code = totp(key=key, len=opts.len)
     print(code)
 
