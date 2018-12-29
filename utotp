@@ -5,12 +5,12 @@
 # Copyright © 2018 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
-import sys
 import base64
-import hmac
-import time
-import struct
 import hashlib
+import hmac
+import struct
+import sys
+import time
 
 def hotp(*, key, n, dgst=hashlib.sha1):
     msg = struct.pack('>Q', n)
