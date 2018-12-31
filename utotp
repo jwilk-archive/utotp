@@ -33,7 +33,8 @@ def hotp(*, key, n, len=default_len, dgst=default_dgst):
     code = mac[offset:(offset + 4)]
     [code] = struct.unpack('>I', code)
     code = code & ~(1 << 31)
-    code = str(code)[-len:]
+    code = '{0:0{len}}'.format(code, len=len)
+    code = code[-len:]
     return code
 
 def totp(*, key, len=default_len, dgst=default_dgst, step=30):
